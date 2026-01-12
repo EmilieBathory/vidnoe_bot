@@ -1,36 +1,31 @@
+import os
 import asyncio
 from telethon import TelegramClient, events
 
-# === Вставь сюда свои данные ===
-api_id = 30888488  # твой API_ID
-api_hash = "67f114b207708b57ab5f8d15138cfd9c"  # твой API_HASH
-bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"  # токен бота
-target_chat = -5230145354  # ID чата, куда бот будет пересылать новости
+# --- ПЕРЕМЕННЫЕ ---
+# Если хочешь тестировать локально, можно прописать прямо сюда:
+api_id = int(os.getenv("API_ID") or 30888488)
+api_hash = os.getenv("API_HASH") or "67f114b207708b57ab5f8d15138cfd9c"
+bot_token = os.getenv("BOT_TOKEN") or "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
+target_chat = int(os.getenv("TARGET_CHAT") or -5230145354)
 
-# Канал, откуда берем новости
-source_channel = "Podslushano_Vidnoe"
+# --- Создаем клиент ---
+bot = TelegramClient('vidnoe_bot', api_id, api_hash).start(bot_token=bot_token)
 
-# Ключевые слова для фильтрации новостей
-keywords = [
-    "Видное", "Ленинский округ", "администрация", "погода", "льготы",
-    "выплаты", "социальная поддержка", "экология", "ЧП", "криминал",
-    "транспорт", "дороги", "строительство", "инфраструктура",
-    "мероприятия", "события", "здоровье"
-]
+# --- Функция пересылки сообщений ---
+@bot.on(events.NewMessage(chats='Podslushano_Vidnoe'))
+async def forward_messages(event):
+    try:
+        # Пересылаем в target_chat
+        await bot.forward_messages(target_chat, event.message)
+        print(f"✅ Переслано сообщение: {event.message.id}")
+    except Exception as e:
+        print(f"❌ Ошибка при пересылке: {e}")
 
-# Создаем клиента Telethon
-client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
-
+# --- Асинхронный запуск ---
 async def main():
-    print(f"🤖 Бот работает и слушает канал {source_channel}...")
-    async for message in client.iter_messages(source_channel, limit=10):
-        if message.text:
-            # проверяем, есть ли ключевое слово в тексте
-            if any(keyword.lower() in message.text.lower() for keyword in keywords):
-                await client.send_message(target_chat, message.text)
-        # пересылаем медиа (картинки, видео)
-        if message.media:
-            await client.send_file(target_chat, message.media)
+    print("🤖 Бот работает и слушает канал Podslushano_Vidnoe...")
+    await bot.run_until_disconnected()
 
-# Запуск бота
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
