@@ -1,49 +1,36 @@
-import os
 import asyncio
 from telethon import TelegramClient, events
 
-# ======== ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ (CAPS) ========
-# Попробуем взять из переменных окружения
-api_id = os.getenv("API_ID")
-api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
-target_chat = os.getenv("TARGET_CHAT")
+# === Вставь сюда свои данные ===
+api_id = 30888488  # твой API_ID
+api_hash = "67f114b207708b57ab5f8d15138cfd9c"  # твой API_HASH
+bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"  # токен бота
+target_chat = -5230145354  # ID чата, куда бот будет пересылать новости
 
-# ======== ДЛЯ ТЕСТА (если env не передались, подставляем вручную) ========
-if api_id is None:
-    api_id = 30888488  # замените на свой ID
-else:
-    api_id = int(api_id)
+# Канал, откуда берем новости
+source_channel = "Podslushano_Vidnoe"
 
-if api_hash is None:
-    api_hash = "67f114b207708b57ab5f8d15138cfd9c"  # замените на свой HASH
+# Ключевые слова для фильтрации новостей
+keywords = [
+    "Видное", "Ленинский округ", "администрация", "погода", "льготы",
+    "выплаты", "социальная поддержка", "экология", "ЧП", "криминал",
+    "транспорт", "дороги", "строительство", "инфраструктура",
+    "мероприятия", "события", "здоровье"
+]
 
-if bot_token is None:
-    bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"  # замените на свой токен
+# Создаем клиента Telethon
+client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-if target_chat is None:
-    target_chat = -5230145354  # замените на свой ID чата
-else:
-    target_chat = int(target_chat)
-
-# ======== СОЗДАЕМ КЛИЕНТА ========
-client = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
-
-# ======== ОБРАБОТКА СООБЩЕНИЙ ========
-@client.on(events.NewMessage(chats='Podslushano_Vidnoe'))
-async def handler(event):
-    try:
-        message = event.message
-        # Пересылаем в целевой чат
-        await client.send_message(target_chat, message)
-        print("Сообщение переслано")
-    except Exception as e:
-        print("Ошибка при пересылке:", e)
-
-# ======== ЗАПУСК БОТА ========
 async def main():
-    print(f"🤖 Бот работает и слушает канал Podslushano_Vidnoe...")
-    await client.run_until_disconnected()
+    print(f"🤖 Бот работает и слушает канал {source_channel}...")
+    async for message in client.iter_messages(source_channel, limit=10):
+        if message.text:
+            # проверяем, есть ли ключевое слово в тексте
+            if any(keyword.lower() in message.text.lower() for keyword in keywords):
+                await client.send_message(target_chat, message.text)
+        # пересылаем медиа (картинки, видео)
+        if message.media:
+            await client.send_file(target_chat, message.media)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# Запуск бота
+asyncio.run(main())
