@@ -1,31 +1,31 @@
-from telethon import TelegramClient, events
+from pyrogram import Client, filters
 import os
 
-# 🔑 Вставь сюда свои реальные данные
+# 🔑 Вставь свои реальные данные
 api_id = 30888488
 api_hash = "67f114b207708b57ab5f8d15138cfd9c"
 bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
 
-# Настройки каналов
-source_chat = "Podslushano_Vidnoe"  # канал, откуда пересылаем сообщения
-target_chat = -5230145354           # куда пересылаем сообщения
-
-# Удаляем старую сессию, чтобы избежать проблем с ApiIdInvalidError
-session_file = "bot.session"
-if os.path.exists(session_file):
-    os.remove(session_file)
+# Каналы
+source_chat = "Podslushano_Vidnoe"
+target_chat = -5230145354
 
 # Создаем клиента
-bot = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
+bot = Client(
+    "vidnoe_bot",
+    api_id=api_id,
+    api_hash=api_hash,
+    bot_token=bot_token
+)
 
 # Обработчик новых сообщений
-@bot.on(events.NewMessage(chats=source_chat))
-async def forward_message(event):
+@bot.on_message(filters.chat(source_chat))
+def forward(client, message):
     try:
-        await bot.send_message(target_chat, event.message)
-        print(f"✅ Сообщение переслано: {event.message.id}")
+        bot.send_message(target_chat, message.text)
+        print(f"✅ Сообщение переслано: {message.message_id}")
     except Exception as e:
         print(f"❌ Ошибка пересылки: {e}")
 
-print(f"🤖 Бот работает и слушает канал {source_chat}...")
-bot.run_until_disconnected()
+print(f"🤖 Бот готов и слушает канал {source_chat}...")
+bot.run()
