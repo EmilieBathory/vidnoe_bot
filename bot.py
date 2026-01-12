@@ -1,16 +1,15 @@
 from pyrogram import Client, filters
-import os
 
-# 🔑 Вставь свои реальные данные
+# 🔑 Вставь сюда свои реальные данные
 api_id = 30888488
 api_hash = "67f114b207708b57ab5f8d15138cfd9c"
 bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
 
-# Каналы
-source_chat = "Podslushano_Vidnoe"
-target_chat = -5230145354
+# Настройки каналов
+source_chat = "Podslushano_Vidnoe"  # канал, откуда пересылаем
+target_chat = -5230145354           # куда пересылаем
 
-# Создаем клиента
+# Создаем клиента бота
 bot = Client(
     "vidnoe_bot",
     api_id=api_id,
