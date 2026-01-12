@@ -1,14 +1,15 @@
 from telethon import TelegramClient, events
 
-# 🔑 Вставь сюда свои реальные данные
+# 🔑 Вставляем свои реальные ключи
 api_id = 30888488
-api_hash = "67f114b207708b57ab5f8d15138cfd9"
+api_hash = "67f114b207708b57ab5f8d15138cfd9c"
 bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
 
-target_chat = -5230145354  # ID чата, куда пересылать сообщения
-source_chat = "Podslushano_Vidnoe"  # канал, откуда пересылать
+# Настройки каналов
+target_chat = -5230145354  # сюда пересылаем сообщения
+source_chat = "Podslushano_Vidnoe"  # откуда пересылаем сообщения
 
-# Создаем клиента
+# Создаем клиента бота
 bot = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
 @bot.on(events.NewMessage(chats=source_chat))
