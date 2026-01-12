@@ -1,53 +1,24 @@
-import os
-import asyncio
-from telethon import TelegramClient, events, types
+# bot.py
 
-# --- Загружаем переменные окружения ---
-api_id = int(os.getenv("API_ID"))
-api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
-target_chat = os.getenv("TARGET_CHAT")  # ID чата или username (@chatname)
+from telethon import TelegramClient, events
 
-# --- Создаем клиента ---
-client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
+# Вставляем значения напрямую (только для теста, потом лучше через переменные окружения)
+api_id = 30888488
+api_hash = "67f114b207708b57ab5f8d15138cfd9c"
+bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
+target_chat = -5230145354
 
-async def forward_last_messages():
-    # Канал, откуда берём новости
-    channel = "Podslushano_Vidnoe"
+client = TelegramClient('bot', api_id, api_hash)
 
-    async for message in client.iter_messages(channel, limit=10):
-        # Пересылаем текст
-        if message.message:
-            await client.send_message(target_chat, message.message)
-
-        # Пересылаем фото
-        if message.photo:
-            await client.send_file(target_chat, message.photo, caption=message.text)
-
-        # Пересылаем видео
-        if message.video:
-            await client.send_file(target_chat, message.video, caption=message.text)
-
-    print("✅ Последние 10 сообщений пересланы.")
-
-# --- Обработчик новых сообщений ---
-@client.on(events.NewMessage(chats="Podslushano_Vidnoe"))
-async def new_message_handler(event):
-    # Пересылаем новое сообщение сразу
-    msg = event.message
-
-    if msg.message:
-        await client.send_message(target_chat, msg.message)
-    if msg.photo:
-        await client.send_file(target_chat, msg.photo, caption=msg.text)
-    if msg.video:
-        await client.send_file(target_chat, msg.video, caption=msg.text)
-
-# --- Основная функция ---
 async def main():
+    await client.start(bot_token=bot_token)
     print("🤖 Бот работает и слушает канал Podslushano_Vidnoe...")
-    await forward_last_messages()
+    # пример пересылки новых сообщений
+    @client.on(events.NewMessage(chats='Podslushano_Vidnoe'))
+    async def handler(event):
+        await client.send_message(target_chat, event.message.text)
+
     await client.run_until_disconnected()
 
-# --- Запуск ---
+import asyncio
 asyncio.run(main())
