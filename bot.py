@@ -1,84 +1,53 @@
-from telethon import TelegramClient
 import os
+import asyncio
+from telethon import TelegramClient, events, types
 
+# --- Загружаем переменные окружения ---
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
+bot_token = os.getenv("BOT_TOKEN")
+target_chat = os.getenv("TARGET_CHAT")  # ID чата или username (@chatname)
 
-client = TelegramClient("session", api_id, api_hash)
+# --- Создаем клиента ---
+client = TelegramClient('bot_session', api_id, api_hash).start(bot_token=bot_token)
 
-client.start()
-me = client.get_me()
-print("👤 Я залогинен как:", me.username, me.id)
+async def forward_last_messages():
+    # Канал, откуда берём новости
+    channel = "Podslushano_Vidnoe"
 
-import asyncio
-from telethon import TelegramClient, events
+    async for message in client.iter_messages(channel, limit=10):
+        # Пересылаем текст
+        if message.message:
+            await client.send_message(target_chat, message.message)
 
-# ================= НАСТРОЙКИ =================
-api_id = 30888488
-api_hash = "67f114b207708b57ab5f8d15138cfd9c"
-bot_token = "8479804734:AAH1CdVRaW1Jobcikse5jB7r2ovMJUv1RWQ"
-target_chat = -5230145354
+        # Пересылаем фото
+        if message.photo:
+            await client.send_file(target_chat, message.photo, caption=message.text)
 
-channels = [
-    "Podslushano_Vidnoe",
-]
+        # Пересылаем видео
+        if message.video:
+            await client.send_file(target_chat, message.video, caption=message.text)
 
-# ================= КЛЮЧЕВЫЕ СЛОВА =================
-local_keywords = [
-    "пробка", "движение", "перекрытие", "ремонт дороги", "платная парковка",
-    "транспорт", "ограничения движения", "стройка", "строительство", "ремонт",
-    "благоустройство", "новый объект", "школа", "детский сад", "фестиваль",
-    "концерт", "ярмарка", "собрание", "встреча с жителями", "парк",
-    "площадь", "улица", "тротуар", "мост", "остановка", "инфраструктура"
-]
+    print("✅ Последние 10 сообщений пересланы.")
 
-global_keywords = [
-    "социальная поддержка", "выплаты", "льготы", "программа", "программы",
-    "больница", "поликлиника", "медицина", "экология", "выброс", "чистота",
-    "мусор", "переработка", "ЧП", "авария", "пожар", "задержание", "полиция",
-    "криминал", "погода", "предупреждение", "информация", "распоряжение",
-    "администрация", "решение", "проект"
-]
+# --- Обработчик новых сообщений ---
+@client.on(events.NewMessage(chats="Podslushano_Vidnoe"))
+async def new_message_handler(event):
+    # Пересылаем новое сообщение сразу
+    msg = event.message
 
-# ==================== БОТ ====================
+    if msg.message:
+        await client.send_message(target_chat, msg.message)
+    if msg.photo:
+        await client.send_file(target_chat, msg.photo, caption=msg.text)
+    if msg.video:
+        await client.send_file(target_chat, msg.video, caption=msg.text)
+
+# --- Основная функция ---
 async def main():
-    client = TelegramClient("session", api_id, api_hash)
-    await client.start(bot_token=bot_token)
     print("🤖 Бот работает и слушает канал Podslushano_Vidnoe...")
-
-    await client.send_message(target_chat, "✅ Бот подключился и готов к работе")
-
-    @client.on(events.NewMessage(chats=channels))
-    async def handler(event):
-        text = event.message.text or ""
-        media = event.message.media
-
-        # Фильтруем по ключевым словам
-        send_post = False
-        if text and any(word.lower() in text.lower() for word in global_keywords):
-            send_post = True
-        elif text and any(word.lower() in text.lower() for word in local_keywords) and \
-             ("Видное" in text or "Ленинский район" in text):
-            send_post = True
-        elif media:  # если только медиа, отправляем тоже
-            send_post = True
-
-        if not send_post:
-            return
-
-        # Формируем текстовое сообщение, если есть текст
-        if text:
-            msg = f"📢 {event.chat.title}\n\n{text}"
-        else:
-            msg = None
-
-        # Пересылаем вместе текст + медиа
-        if media:
-            await client.send_file(target_chat, media, caption=msg)
-        elif msg:
-            await client.send_message(target_chat, msg)
-
+    await forward_last_messages()
     await client.run_until_disconnected()
 
-# Запуск бота
+# --- Запуск ---
 asyncio.run(main())
