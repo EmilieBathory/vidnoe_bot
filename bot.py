@@ -1,3 +1,15 @@
+from telethon import TelegramClient
+import os
+
+api_id = int(os.getenv("API_ID"))
+api_hash = os.getenv("API_HASH")
+
+client = TelegramClient("session", api_id, api_hash)
+
+client.start()
+me = client.get_me()
+print("👤 Я залогинен как:", me.username, me.id)
+
 import asyncio
 from telethon import TelegramClient, events
 
