@@ -1,5 +1,1 @@
 telethon==1.30.0
-pyaes
-rsa
-pyasn1
-Pillow
